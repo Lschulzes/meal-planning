@@ -1,0 +1,3 @@
+{
+  "extends": "@meal-planning/config/tsconfig.base.json"
+}
