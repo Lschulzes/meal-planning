@@ -10,6 +10,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
+import { startWorker, runFullSync, runEnrichmentOnly } from "./worker/index";
+
 const app = new Hono();
 
 app.use(logger());
@@ -17,11 +19,11 @@ app.use(
   "/*",
   cors({
     origin: env.CORS_ORIGIN,
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
 
-export const apiHandler = new OpenAPIHandler(appRouter, {
+const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
     new OpenAPIReferencePlugin({
       schemaConverters: [new ZodToJsonSchemaConverter()],
@@ -34,7 +36,7 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
   ],
 });
 
-export const rpcHandler = new RPCHandler(appRouter, {
+const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
       console.error(error);
@@ -66,6 +68,27 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
+// Admin trigger routes (not through oRPC — direct Hono routes)
+app.post("/api/admin/sync", async (c) => {
+  try {
+    const result = await runFullSync();
+    return c.json(result);
+  } catch (err) {
+    console.error("Manual sync failed:", err);
+    return c.json({ error: "Sync failed" }, 500);
+  }
+});
+
+app.post("/api/admin/enrich", async (c) => {
+  try {
+    const result = await runEnrichmentOnly();
+    return c.json(result);
+  } catch (err) {
+    console.error("Manual enrichment failed:", err);
+    return c.json({ error: "Enrichment failed" }, 500);
+  }
+});
+
 app.get("/", (c) => {
   return c.text("OK");
 });
@@ -75,9 +98,12 @@ import { serve } from "@hono/node-server";
 serve(
   {
     fetch: app.fetch,
-    port: 3000,
+    port: env.PORT,
   },
   (info) => {
     console.log(`Server is running on http://localhost:${info.port}`);
   },
 );
+
+// Start the cron worker
+startWorker();
