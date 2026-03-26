@@ -44,6 +44,15 @@
     },
     "db:down": {
       "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
+    "sync": {
+      "cache": false
+    },
+    "sync:enrich": {
+      "cache": false
     }
   }
 }

@@ -7,9 +7,12 @@
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.mjs"
+    "start": "node dist/index.mjs",
+    "sync": "tsx src/worker/run-sync.ts",
+    "sync:enrich": "tsx src/worker/run-enrichment.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.80.0",
     "@hono/node-server": "^1.14.4",
     "@meal-planning/api": "workspace:*",
     "@meal-planning/db": "workspace:*",
@@ -18,12 +21,16 @@
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.1",
     "hono": "catalog:",
+    "node-cron": "4.2.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@meal-planning/config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/node-cron": "3.0.11",
+    "@types/pg": "8.20.0",
     "tsdown": "^0.16.5",
     "tsx": "^4.19.2",
     "typescript": "^5"
