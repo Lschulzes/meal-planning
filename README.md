@@ -1,97 +1,84 @@
-# meal-planning
+# MealPilot
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Router, Hono, ORPC, and more.
+AI-powered meal planning that works with your Sam's Club membership. MealPilot syncs real product data, generates personalized weekly meal plans using Claude AI, and creates shopping lists optimized for Sam's Club's $50 free delivery minimum.
 
-## Features
+## How It Works
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Router** - File-based routing with full type safety
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **oRPC** - End-to-end type-safe APIs with OpenAPI integration
-- **Node.js** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Turborepo** - Optimized monorepo build system
+1. **Set preferences** — dietary restrictions, cuisine preferences, budget, cooking skill
+2. **AI generates meal concepts** — Claude suggests a week of meals based on your preferences and past feedback
+3. **Review and customize** — swap out meals you don't want, approve the plan
+4. **Get full recipes** — Claude generates detailed recipes using available Sam's Club products
+5. **Shop** — an optimized shopping list with real prices, targeting free delivery
 
-## Getting Started
+Behind the scenes, a daily sync fetches current Sam's Club products and enriches them with USDA nutritional data.
 
-First, install the dependencies:
+## Quick Start
 
 ```bash
+# 1. Install dependencies
 pnpm install
+
+# 2. Configure environment
+cp apps/server/.env.example apps/server/.env
+# Edit .env: set ANTHROPIC_API_KEY, USDA_API_KEY, SAMSCLUB_ZIP_CODE
+
+# 3. Start PostgreSQL
+docker compose -f packages/db/docker-compose.yml up -d
+
+# 4. Set up database
+pnpm db:push
+pnpm db:seed
+
+# 5. Run
+pnpm dev
 ```
 
-## Database Setup
+- **Web app**: http://localhost:3001
+- **API server**: http://localhost:3000
+- **API docs**: http://localhost:3000/api-reference
 
-This project uses PostgreSQL with Drizzle ORM.
+## Tech Stack
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
-
-```bash
-pnpm run db:push
-```
-
-Then, run the development server:
-
-```bash
-pnpm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@meal-planning/ui/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TanStack Router, TanStack Query, Tailwind CSS v4 |
+| Backend | Hono, oRPC (typed end-to-end), Node.js |
+| Database | PostgreSQL 15, Drizzle ORM |
+| AI | Anthropic Claude (claude-sonnet-4-20250514) |
+| External Data | Sam's Club product API, USDA FoodData Central |
+| Monorepo | Turborepo, pnpm workspaces |
 
 ## Project Structure
 
 ```
-meal-planning/
-├── apps/
-│   ├── web/         # Frontend application (React + TanStack Router)
-│   └── server/      # Backend API (Hono, ORPC)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── api/         # API layer / business logic
-│   └── db/          # Database schema & queries
+apps/
+  server/           Hono API + cron worker
+  web/              React SPA
+packages/
+  api/              oRPC router definitions
+  db/               Drizzle schema + migrations
+  env/              Environment validation
+  ui/               Shared shadcn/ui components
 ```
 
-## Available Scripts
+## Environment Variables
 
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `ANTHROPIC_API_KEY` | For AI | Claude API key |
+| `USDA_API_KEY` | For nutrition | [Get one free](https://fdc.nal.usda.gov/api-key-signup/) |
+| `SAMSCLUB_ZIP_CODE` | For sync | Your zip code for nearest Sam's Club |
+
+## Scripts
+
+```bash
+pnpm dev              # Start everything
+pnpm build            # Production build
+pnpm check-types      # TypeScript type checking
+pnpm db:push          # Push schema to database
+pnpm db:seed          # Seed default preferences
+pnpm db:studio        # Open Drizzle Studio
+pnpm sync             # Manual product sync
+pnpm sync:enrich      # USDA nutrition enrichment
+```

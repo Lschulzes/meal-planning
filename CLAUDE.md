@@ -1,49 +1,34 @@
-# MealPilot — Project Context
+# MealPilot
 
-## What is this?
-Personal meal planning app that syncs Sam's Club grocery data, uses Claude AI to generate weekly meal plans, and creates optimized shopping lists.
+Personal meal planning app. Syncs Sam's Club grocery products, enriches with USDA nutrition data, uses Claude AI to generate weekly meal plans, and creates optimized shopping lists targeting Sam's Club's $50 free delivery minimum.
 
-## Architecture
-- Monorepo: Turborepo + pnpm workspaces
-- Frontend: `apps/web/` — React + TanStack Router + TanStack Query + Tailwind
-- Backend: `apps/server/` — Hono + oRPC + Drizzle ORM + PostgreSQL
-- Shared API: `packages/api/` — oRPC router definitions
-- Shared DB: `packages/db/` — Drizzle schema + DB client
-- Shared Env: `packages/env/` — t3-env validation
-- Shared UI: `packages/ui/` — shadcn/ui components
-- No auth — single user app
+Single-user app — no authentication.
 
-## Key Directories
-- `packages/db/src/schema/` — Drizzle schema files (one per table)
-- `packages/api/src/routers/` — oRPC routers (products, preferences, mealPlans, shoppingList, feedback, admin)
-- `apps/server/src/services/samsclub/` — Sam's Club scraper
-- `apps/server/src/services/usda/` — USDA nutritional data enrichment
-- `apps/server/src/services/ai/` — Claude AI meal planning
-- `apps/server/src/worker/` — Cron sync worker
-- `apps/web/src/routes/` — TanStack Router pages (file-based routing)
-- `apps/web/src/components/` — React components
+## Monorepo Map
 
-## Conventions
-- All DB IDs are UUIDs
-- oRPC for all client-server communication (typed end-to-end)
-- Zod for all validation schemas
-- AI outputs are validated against Zod schemas via tool_use
-- Products are tagged with categories for efficient AI context building
-- Daily sync runs at 3am, can be triggered manually via POST /api/admin/sync
+| Path | What | Stack |
+|------|------|-------|
+| `apps/server/` | API server | Hono, oRPC, node-cron |
+| `apps/web/` | Frontend SPA | React, TanStack Router/Query, Tailwind |
+| `packages/api/` | Typed RPC routers | oRPC, Zod |
+| `packages/db/` | Schema + DB client | Drizzle ORM, PostgreSQL |
+| `packages/env/` | Env validation | t3-env |
+| `packages/ui/` | Design system | shadcn/ui |
 
-## Quick Start
-1. Copy `apps/server/.env.example` to `apps/server/.env`
-2. Get USDA API key from https://fdc.nal.usda.gov/api-key-signup/
-3. Set ANTHROPIC_API_KEY
-4. Set SAMSCLUB_ZIP_CODE
-5. `docker compose -f packages/db/docker-compose.yml up -d` (Postgres)
-6. `pnpm db:push` (push schema to DB)
-7. `pnpm db:seed` (creates default preferences)
-8. `pnpm dev` (starts both server and web)
+## Verifying Changes
 
-## AI Multi-Step Flow
-1. `generateMealConcepts()` — cheap call, returns meal names + metadata
-2. User reviews/swaps concepts on frontend
-3. `generateFullRecipes()` — medium call, returns structured recipes mapped to Sam's Club products
-4. Backend validates product mappings, calculates cart, generates shopping list
-5. Optional: `suggestCartAddons()` if cart < $50
+```bash
+pnpm check-types      # TypeScript across all packages
+pnpm dev              # Start server (:3000) + web (:3001)
+pnpm db:push          # Push schema changes to PostgreSQL
+```
+
+## Context Docs
+
+Read these before working in the relevant area — they contain architecture decisions, conventions, and how-to details:
+
+- `agent_docs/architecture.md` — system design, data flow, service boundaries, key decisions
+- `agent_docs/database.md` — schema overview, column conventions, setup commands
+- `agent_docs/api.md` — oRPC router structure, context, how to add new routers
+- `agent_docs/frontend.md` — routing, data fetching, design system, component organization
+- `agent_docs/commands.md` — all dev, build, db, and sync commands
