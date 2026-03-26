@@ -8,7 +8,8 @@ import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useState } from "react";
 
-import Header from "@/components/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import { Sidebar } from "@/components/layout/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { link, orpc } from "@/utils/orpc";
 
@@ -24,11 +25,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "meal-planning",
+        title: "MealPilot",
       },
       {
         name: "description",
-        content: "meal-planning is a web application",
+        content: "MealPilot - Your AI-powered meal planning assistant",
       },
     ],
     links: [
@@ -41,8 +42,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
-  const [client] = useState<AppRouterClient>(() => createORPCClient(link));
-  const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
+  const [_client] = useState<AppRouterClient>(() => createORPCClient(link));
+  const [_orpcUtils] = useState(() => createTanstackQueryUtils(_client));
 
   return (
     <>
@@ -53,9 +54,14 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
+        <div className="flex min-h-svh">
+          <Sidebar />
+          <main className="flex-1 min-w-0 pb-20 md:pb-0">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
+              <Outlet />
+            </div>
+          </main>
+          <MobileNav />
         </div>
         <Toaster richColors />
       </ThemeProvider>
